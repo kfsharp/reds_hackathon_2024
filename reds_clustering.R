@@ -33,15 +33,24 @@ q_pitchers <- season_data %>%
   group_by(MLBAMID, Season) %>%
   select(NameASCII, MLBAMID, Season, Role, Location_plus, K_to_BB)
 
+pitch_counts <- pitch_data %>%
+  group_by(game_year,player_name,pitcher,pitch_type) %>%
+  dplyr::summarize(count = n())
+
+pitch_data <- left_join(pitch_data,pitch_counts,by = c("game_year","player_name","pitcher","pitch_type"))
+
 variables <- pitch_data %>%
   group_by(game_year, player_name, pitcher) %>%
   dplyr::summarize(
     pitches = n(),
-    arsenal = n_distinct(pitch_type),
+    arsenal = n_distinct(pitch_type[count >= 10]),
     mph_loss = cor(release_speed[pitch_type %in% c('FF', 'SI')], pitch_number_appearance[pitch_type %in% c('FF', 'SI')]),
     platoon = mean(estimated_woba_using_speedangle[stand == 'R'], na.rm = T) - mean(estimated_woba_using_speedangle[stand == 'L'], na.rm = T)
   ) %>%
   filter(pitches >= 200)
+
+
+
 
 merged_data <- left_join(q_pitchers, variables, by = c("MLBAMID" = "pitcher", "Season" = "game_year")) %>%
   select(-c('NameASCII')) %>%
