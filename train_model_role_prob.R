@@ -20,7 +20,7 @@ season_data <- drop_read_csv("Datasets/Reds Hackathon/fangraphs_season_level.csv
 q_pitchers <- season_data %>%
   filter(IP >= 20) %>%
   group_by(MLBAMID, Season) %>%
-  select(NameASCII, MLBAMID, Season, Location_plus, K_minus_BB_pct, Stuff_plus)
+  select(NameASCII, MLBAMID, Season, Location_plus, Stuff_plus)
 
 pitch_counts <- pitch_data %>%
   filter(!pitch_type %in% c('PO', 'FA', 'FO')) %>%

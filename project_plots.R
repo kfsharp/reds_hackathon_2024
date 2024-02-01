@@ -16,13 +16,13 @@ pitch_data <- drop_read_csv("Datasets/Reds Hackathon/savant_pitch_level.csv")
 
 ## Pitch Movement Plots
 pitcher_specific <- pitch_data %>%
-  filter(player_name == 'Phillips, Connor', game_year == 2023) %>%
+  filter(player_name == 'Kopech, Michael', game_year == 2023) %>%
   tail(200)
 
 PitchTypeColors <- c("FF"="red", "SI"="deeppink", "FC"="blue", "CU"="orange", "KC"="orange", "SV"="orange", "SL"="deepskyblue", "ST"="deepskyblue", 
                      "CH"="palegreen4", "FS"="palegreen3", "KN"="grey55")
 
-ggplot(pitcher_specific, aes(x = pfx_x*12, y = pfx_z*12)) + 
+ggplot(pitcher_specific, aes(x = -pfx_x*12, y = pfx_z*12)) + 
   labs(title = paste0("Connor Phillips Pitch Movement (Last 200)")) + 
   scale_x_continuous(limits = c(-30, 30),  breaks = c(-30, -20, -10, 0, 10, 20, 30)) + 
   scale_y_continuous(limits = c(-30, 30),  breaks = c(-30, -20, -10, 0, 10, 20, 30)) +
@@ -32,7 +32,8 @@ ggplot(pitcher_specific, aes(x = pfx_x*12, y = pfx_z*12)) +
   scale_fill_manual(values = PitchTypeColors) +
   theme_bw() + theme(text = element_text(size = 12)) +
   theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5), axis.text = element_text(size = 12), axis.title = element_blank()) + 
-  theme(legend.position = "none") +
+  theme(legend.position = "bottom") +
+  guides(fill=guide_legend("Pitch Type")) +
   coord_equal()
 
 ## Pitch Locations
