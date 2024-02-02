@@ -11,7 +11,7 @@ library(caret)
 source("../hawkeye_functions/handling_trackman_functions.R")
 options(scipen = 999)
 load("model_files/model_role_prob.RDS") 
-# ^^ This is a role probability model. Training code is below but you can load it in to explore without retraining it
+# ^^ This is a role probability model. Training code is below but you can load model without retraining
 
 #Load Provided Data (2021, 2022, 2023)
 pitch_data <- drop_read_csv("Datasets/Reds Hackathon/savant_pitch_level.csv")
@@ -24,10 +24,10 @@ q_pitchers <- season_data %>%
 
 pitch_counts <- pitch_data %>%
   filter(!pitch_type %in% c('PO', 'FA', 'FO')) %>%
-  group_by(game_year,player_name,pitcher,pitch_type) %>%
+  group_by(game_year, player_name, pitcher,pitch_type) %>%
   dplyr::summarize(count = n())
 
-pitch_data <- left_join(pitch_data,pitch_counts,by = c("game_year","player_name","pitcher","pitch_type"))
+pitch_data <- left_join(pitch_data, pitch_counts, by = c("game_year","player_name","pitcher","pitch_type"))
 
 variables <- pitch_data %>%
   group_by(game_year, player_name, pitcher) %>%
@@ -63,15 +63,16 @@ test <- df_train[-dt,]
 
 #Build a logistic regression model
 model <- glm(role_binary ~ Stuff_plus + Location_plus + mph_loss + arsenal, data = merged_data, family = "binomial")
+summary(model)
 #save(model, file = "model_files/model_role_prob.RDS")
 
 #Visualize Feature Importance
 feature_importance = caret::varImp(model)
 
-ggplot2::ggplot(feature_importance, aes(x=reorder(rownames(feature_importance),Overall), y=Overall)) +
+ggplot2::ggplot(feature_importance, aes(x=reorder(rownames(feature_importance), Overall), y = Overall)) +
   geom_point( color="#FFCD00", size=4, alpha=0.6)+
-  geom_segment( aes(x=rownames(feature_importance), xend=rownames(feature_importance), y=0, yend=Overall), 
-                color='black') +
+  geom_segment( aes(x = rownames(feature_importance), xend = rownames(feature_importance), y = 0, yend = Overall), 
+                color = 'black') +
   xlab('Variable')+
   ylab('Overall Importance') +
   theme_light() +
