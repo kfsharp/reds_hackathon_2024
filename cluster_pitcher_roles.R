@@ -14,16 +14,16 @@ pitch_data <- drop_read_csv("Datasets/Reds Hackathon/savant_pitch_level.csv")
 season_data <- drop_read_csv("Datasets/Reds Hackathon/fangraphs_season_level.csv")
 
 q_pitchers <- season_data %>%
-  filter(IP >= 20) %>%
   group_by(MLBAMID, Season) %>%
-  select(NameASCII, MLBAMID, Season, Location_plus, Stuff_plus)
+  select(NameASCII, MLBAMID, Season, Location_plus, Stuff_plus) %>%
+  filter(IP >= 20)
 
 pitch_counts <- pitch_data %>%
   filter(!pitch_type %in% c('PO', 'FA', 'FO')) %>%
-  group_by(game_year,player_name,pitcher,pitch_type) %>%
+  group_by(game_year, player_name, pitcher, pitch_type) %>%
   dplyr::summarize(count = n())
 
-pitch_data <- left_join(pitch_data,pitch_counts,by = c("game_year","player_name","pitcher","pitch_type"))
+pitch_data <- left_join(pitch_data, pitch_counts, by = c("game_year", "player_name", "pitcher", "pitch_type"))
 
 variables <- pitch_data %>%
   group_by(game_year, player_name, pitcher) %>%
@@ -43,7 +43,6 @@ merged_data <- left_join(q_pitchers, variables, by = c("MLBAMID" = "pitcher", "S
   filter(Season == 2023) %>%
   na.omit()
 
-#Batters per game appears to be bimodal distribution
 pitcher_role_types <- season_data %>%
   group_by(NameASCII, Season, MLBAMID) %>%
   dplyr::summarize(
@@ -56,11 +55,6 @@ hist(pitcher_role_types$batters_faced) #Proof that there are only two roles for 
 #########################################
 ########### K-means Cluster #############
 #########################################
-# cluster_df <- merged_data %>%
-#   left_join(pitcher_role_types, by = "MLBAMID") %>%
-#   select(MLBAMID, Location_plus, Stuff_plus, arsenal, mph_loss, batters_faced)
-# 
-
 cluster_df <- merged_data %>%
   left_join(pitcher_role_types, by = "MLBAMID") %>%
   select(arsenal, mph_loss, batters_faced)
@@ -70,10 +64,6 @@ cluster_df <- scale(cluster_df)
 head(cluster_df)
 
 #Find optimal number of clusters
-#Silhouette Method
-# set.seed(123)
-# fviz_nbclust(cluster_df, kmeans, method = "silhouette")
-
 #Gap Stat Method
 set.seed(123)
 gap_stat <- clusGap(cluster_df, FUN = kmeans, nstart = 25,
@@ -85,16 +75,15 @@ fviz_gap_stat(gap_stat) +
   theme(axis.text = element_text(size = 10, face = 'bold'), axis.title = element_text(face = 'bold'))
   
 
-
 ###################
 # Create Clusters #
 ###################
 
-# Perform k-means clustering with the chosen number of clusters
+#Perform k-means clustering with the chosen number of clusters
 set.seed(123)
 role_cluster <- kmeans(cluster_df, centers = 2, nstart = 25)
 
-# Visualize the clusters
+#Visualize the clusters
 fviz_cluster(role_cluster, data = cluster_df, 
              paletter = 'Set2', ggtheme = theme_bw()) +
   ggtitle('Pitcher Role Clusters') +
@@ -103,12 +92,10 @@ fviz_cluster(role_cluster, data = cluster_df,
   
 
 #Append back to initial DF
-#Unscale data
 unscaled_data <- t(apply(cluster_df, 1, 
                        function(r) r * attr(cluster_df, 'scaled:scale') + 
                          attr(cluster_df, 'scaled:center')))
 
-#Add clusters to unscaled data
 pitcher_groups <- as.data.frame(cbind(unscaled_data, cluster = role_cluster$cluster)) %>%
   select('MLBAMID', 'cluster')
 
@@ -116,4 +103,5 @@ final_data <- left_join(q_pitchers, pitcher_groups, by = 'MLBAMID') %>%
   filter(Season == 2023) %>%
   na.omit()
 
-       
+
+

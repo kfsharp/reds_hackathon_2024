@@ -27,7 +27,7 @@ pitch_counts <- pitch_data %>%
   group_by(game_year, player_name, pitcher,pitch_type) %>%
   dplyr::summarize(count = n())
 
-pitch_data <- left_join(pitch_data, pitch_counts, by = c("game_year","player_name","pitcher","pitch_type"))
+pitch_data <- left_join(pitch_data, pitch_counts, by = c("game_year", "player_name", "pitcher", "pitch_type"))
 
 variables <- pitch_data %>%
   group_by(game_year, player_name, pitcher) %>%
@@ -92,6 +92,7 @@ sp_subset <- test[test$primary_role == "SP", ]
 ten_largest_rp <- head(rp_subset[order(-rp_subset$role_prob), ], 10)
 #SP Misfits
 ten_smallest_sp <- head(sp_subset[order(sp_subset$role_prob), ], 10)
+
 
 #########################
 ###Apply Model to 2023###
