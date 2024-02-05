@@ -18,9 +18,9 @@ pitch_data <- drop_read_csv("Datasets/Reds Hackathon/savant_pitch_level.csv")
 season_data <- drop_read_csv("Datasets/Reds Hackathon/fangraphs_season_level.csv")
 
 q_pitchers <- season_data %>%
-  filter(IP >= 20) %>%
   group_by(MLBAMID, Season) %>%
-  select(NameASCII, MLBAMID, Season, Location_plus, Stuff_plus)
+  select(NameASCII, MLBAMID, Season, Location_plus, Stuff_plus) %>%
+  filter(IP >= 20) %>%
 
 pitch_counts <- pitch_data %>%
   filter(!pitch_type %in% c('PO', 'FA', 'FO')) %>%
@@ -62,12 +62,12 @@ train <- df_train[dt,]
 test <- df_train[-dt,]
 
 #Build a logistic regression model
-model <- glm(role_binary ~ Stuff_plus + Location_plus + mph_loss + arsenal, data = merged_data, family = "binomial")
-summary(model)
-#save(model, file = "model_files/model_role_prob.RDS")
+model_role_prob <- glm(role_binary ~ Stuff_plus + Location_plus + mph_loss + arsenal, data = merged_data, family = "binomial")
+summary(model_role_prob)
+#save(model_role_prob, file = "model_files/model_role_prob.RDS")
 
 #Visualize Feature Importance
-feature_importance = caret::varImp(model)
+feature_importance = caret::varImp(model_role_prob)
 
 ggplot2::ggplot(feature_importance, aes(x=reorder(rownames(feature_importance), Overall), y = Overall)) +
   geom_point( color="#FFCD00", size=4, alpha=0.6)+
@@ -76,10 +76,13 @@ ggplot2::ggplot(feature_importance, aes(x=reorder(rownames(feature_importance), 
   xlab('Variable')+
   ylab('Overall Importance') +
   theme_light() +
-  coord_flip() 
+  ggtitle('Model Feature Importance') +
+  theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5)) +
+  theme(axis.text = element_text(size = 10, face = 'bold'), axis.title = element_text(face = 'bold')) +
+  coord_flip()
 
 #Make predictions for role
-test$role_prob <- predict(model, newdata = test, type = "response")
+test$role_prob <- predict(model_role_prob, newdata = test, type = "response")
 
 #Find largest misfits
 rp_subset <- test[test$primary_role == "RP", ]
@@ -96,7 +99,7 @@ ten_smallest_sp <- head(sp_subset[order(sp_subset$role_prob), ], 10)
 df_23 <- merged_data %>%
   filter(Season == 2023)
 
-df_23$role_prob <- with(df_23, predict(model, df_23, type = "response"))
+df_23$role_prob <- with(df_23, predict(model_role_prob, df_23, type = "response"))
 
 #Find largest misfits
 rp_subset <- df_23[df_23$primary_role == "RP", ]
@@ -106,6 +109,5 @@ sp_subset <- df_23[df_23$primary_role == "SP", ]
 sp_candidates <- head(rp_subset[order(-rp_subset$role_prob), ], 10)
 #SP Misfits
 rp_candidates <- head(sp_subset[order(sp_subset$role_prob), ], 10)
-
 
 
