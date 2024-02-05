@@ -44,7 +44,9 @@ variables <- pitch_data %>%
 merged_data <- left_join(q_pitchers, variables, by = c("MLBAMID" = "pitcher", "Season" = "game_year")) %>%
   select(-c('NameASCII')) %>%
   na.omit() %>%
-  mutate(fbs_per_app = fbs/G)
+  mutate(fbs_per_app = fbs/G) %>%
+  filter(fbs_per_app > 4)
+
   
 
 df_train <- merged_data
